@@ -1,0 +1,1 @@
+{"name":"oromo-ai-research-hub","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs"},"dependencies":{"marked":"^15.0.12","sanitize-html":"^2.17.0"}}
