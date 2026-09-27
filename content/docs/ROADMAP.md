@@ -101,7 +101,7 @@ The cleaning philosophy remains conservative: remove demonstrable extraction/dat
 
 ## Phase 2B — OromoCorpus expansion
 
-**Status: active**
+**Status: 50M minimum achieved; expansion toward 100M active**
 
 Release milestones:
 
@@ -122,43 +122,64 @@ Using the Oromo Unigram 48K + byte-fallback research tokenizer as the current pl
 | Wikimedia omwiki v0.1 | 2,254 | 1,070,896 | approved/frozen |
 | VOA Afaan Oromoo via WURA v0.1 | 9,510 | 1,899,811 | approved/frozen |
 | WaxalNLP Oromo ASR v0.1 | 44,194 | 1,934,045 | approved/frozen |
-| **Accepted total** | **466,151** | **14,492,686** | **28.99% of v0.2 minimum** |
+| MADLAD-400 Oromo v0.2 | 18,704 | 17,873,390 | approved/frozen — ODC-BY |
+| HPLT 3.0 gaz_Latn v0.1 | 26,655 | 19,771,727 | approved/frozen — CC0 packaging; underlying text caveat |
+| **Accepted total** | **511,510** | **52,137,803** | **104.28% of v0.2 minimum** |
 
-### Research-qualified HOLD source
+### MADLAD-400 approval
 
-| Source | Records | 48K reference tokens | Status |
-|---|---:|---:|---|
-| MADLAD-400 Oromo v0.1 | 18,704 | 17,873,390 | research hold |
+MADLAD-400 Oromo v0.2 is accepted under the upstream AllenAI MADLAD-400
+dataset's published **ODC-BY** license. The project preserves AllenAI /
+MADLAD-400 attribution and explicitly records that the approval relies on the
+dataset-level license representation rather than independent clearance of
+every underlying Common Crawl content item.
 
-The separate technical research pool is now **32,366,076 reference tokens**,
-or **64.73% of the 50M minimum**.
+The approved artifact contributes **18,704 records / 17,873,390 48K-reference
+tokens**. Provenance recovery independently mapped **1,917 records / 1,874,398
+tokens (10.49%)** to official v1.5 URLs and timestamps across 182 domains; the
+remaining source-level provenance is not independently verified, but this no
+longer blocks project acceptance under the upstream dataset license.
 
-MADLAD is not counted toward the accepted OromoCorpus release target. A
-subsequent provenance-recovery audit mapped **1,917 final research-clean
-records / 1,874,398 48K-reference tokens (10.49%)** to official MADLAD v1.5
-URLs and timestamps. The remaining **16,787 records / 15,998,992 reference
-tokens** remain provenance-unresolved, and source-level licensing review is
-incomplete.
+See `docs/sources/MADLAD_400_LICENSE_DECISION.md`.
+
+### HPLT 3.0 approval and 50M milestone
+
+HPLT 3.0 `gaz_Latn` v0.1 contributes **26,655 records / 19,771,727
+48K-reference tokens** after restricting the release to WDS bins 8–10,
+cross-source exact/near deduplication, structural-quality screening, and a
+full GlotLID v3 pass over the structurally clean candidate population.
+
+The frozen artifact contains 26,570 `gaz_Latn` top-1 records and 85
+`hae_Latn` top-1 records across 1,091 unique domains. Ambiguous,
+strong-non-Oromo, structurally flagged, and WDS 5–7 material remain excluded
+from v0.1.
+
+HPLT licenses the dataset packaging under CC0 while stating that it does not
+own the underlying extracted text. The project therefore records underlying
+individual-content rights as not independently verified. See
+`docs/sources/HPLT3_LICENSE_DECISION.md`.
 
 ```text
-remaining to 50M: 35,507,314 reference tokens
-progress to 100M: 14.49%
+50M minimum achieved: 52,137,803 reference tokens
+margin above 50M:       2,137,803 reference tokens
+progress to 100M:       52.14%
 ```
 
 The full WURA Oromo package remains under review and does not count toward the accepted total. WURA is currently used as a source-discovery/provenance layer; only independently rights-cleared subsets enter OromoCorpus.
 
-MADLAD-400 Oromo v0.1 has completed exact deduplication, canonical near
-deduplication, conservative quality triage, GlotLID-assisted language review,
-manual review, and 48K-reference measurement.
+MADLAD-400 Oromo completed exact deduplication, canonical near deduplication,
+conservative quality triage, GlotLID-assisted language review, manual review,
+48K-reference measurement, and provenance investigation before its v0.2
+approval.
 
 The frozen research-clean artifact contains **18,704 records / 17,873,390
-reference tokens** and remains `research_hold`. The official v1.5 recovery
-covers 1,917 of those records across 182 recovered domains. A 326-record
-VOA-domain tranche (128,693 reference tokens) has been isolated for rights
-screening, but no MADLAD-derived tokens have been promoted into accepted
-OromoCorpus.
+reference tokens** and is now included in accepted OromoCorpus under the
+upstream MADLAD-400 **ODC-BY** dataset license. Official v1.5 recovery covers
+1,917 records across 182 domains; the remaining source-level provenance is
+documented as not independently verified rather than omitted from the audit
+trail.
 
-Next-source selection now prioritizes rights-clear sources or publisher clusters with a realistic **5M–15M+ net-new-token** contribution. Smaller sources remain worthwhile when they materially improve domain, dialect, literary, conversational, or technical coverage.
+With the 50M minimum achieved, the next-source strategy prioritizes progress toward 100M and corpus balance. New sources should materially improve domain, dialect, literary, educational, technical, public-information, or conversational coverage; raw size alone is no longer the primary constraint.
 
 Primary work:
 
@@ -454,18 +475,18 @@ The project is currently here:
 ✅ MADLAD-400 Oromo technical + quality qualification complete
 ✅ MADLAD provenance recovery: 1,917 records / 1,874,398 tokens mapped to official v1.5 URLs
 ✅ MADLAD recovered-domain inventory: 182 domains
-✅ MADLAD→VOA candidate tranche isolated: 326 records / 128,693 tokens
-⏸️ MADLAD remains research HOLD; 16,787 records / 15,998,992 tokens unresolved
-✅ Current accepted 48K-reference corpus measurement: 14,492,686 tokens
-✅ Separate technical research pool measurement: 32,366,076 tokens
+✅ MADLAD-400 Oromo v0.2 approved under upstream ODC-BY dataset license
+✅ HPLT 3.0 gaz_Latn v0.1 approved/frozen: 26,655 records / 19,771,727 tokens
+✅ 50M minimum corpus milestone achieved
+✅ Current accepted 48K-reference corpus measurement: 52,137,803 tokens
 ✅ Frozen tokenizer evaluation
 ✅ Multilingual/custom tokenizer baselines
 ✅ Native causal-LM tokenizer benchmark (Phase 4A)
 ✅ Whole-word augmentation study (Phase 4B1)
         ↓
-🔄 Expand accepted OromoCorpus from 14.49M toward 50M net unique tokens
+🔄 Expand accepted OromoCorpus from 52.14M toward the preferred 100M target
         ↓
-🔄 Audit next rights-clear 5M–15M+ token source / publisher cluster
+🔄 Improve corpus domain/dialect balance while expanding toward 100M / publisher cluster
         ↓
 ⏳ Continue base-model + tokenizer strategy decision
         ↓

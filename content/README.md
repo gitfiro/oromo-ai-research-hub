@@ -54,7 +54,7 @@ The goal is not to build a quick chatbot. The goal is to create reusable, docume
 
 | Component | Purpose | Status |
 | --- | --- | --- |
-| **OromoCorpus** | Versioned, provenance-tracked Afaan Oromoo training corpus | 🔄 Active expansion |
+| **OromoCorpus** | Versioned, provenance-tracked Afaan Oromoo training corpus | ✅ 50M minimum achieved; expanding toward 100M |
 | **OromoTokenizer** | Tokenization research and Oromo-aware tokenizer candidates | ✅ Core benchmarks complete |
 | **OromoLM** | Continued-pretrained Afaan Oromoo causal language models | ⏳ Base-model strategy in progress |
 | **OromoBench** | Afaan Oromoo evaluation framework | 🔄 In development |
@@ -75,41 +75,57 @@ The current accepted corpus planning total is measured with the **Oromo Unigram 
 | Wikimedia omwiki v0.1 | 2,254 | 1,070,896 |
 | VOA Afaan Oromoo via WURA v0.1 | 9,510 | 1,899,811 |
 | WaxalNLP Oromo ASR v0.1 | 44,194 | 1,934,045 |
-| **Accepted total** | **466,151** | **14,492,686** |
+| MADLAD-400 Oromo v0.2 | 18,704 | 17,873,390 |
+| HPLT 3.0 gaz_Latn v0.1 | 26,655 | 19,771,727 |
+| **Accepted total** | **511,510** | **52,137,803** |
 
-### Research-qualified source on HOLD
+### MADLAD-400 licensing basis
 
-MADLAD-400 Oromo v0.1 has passed technical processing, cross-source
-deduplication, conservative language-quality review, tokenizer-reference
-measurement, and a first provenance-recovery audit. Official MADLAD v1.5
-provenance was recovered for **1,917 final research-clean records / 1,874,398
-48K-reference tokens (10.49%)**. The remaining **16,787 records / 15,998,992
-reference tokens** remain provenance-unresolved.
+MADLAD-400 Oromo v0.2 is now **accepted** into OromoCorpus under the upstream
+AllenAI MADLAD-400 dataset's published **ODC-BY** license. The approved frozen
+research-clean artifact contains **18,704 records / 17,873,390 48K-reference
+tokens**.
 
-| Source | Research-clean records | 48K reference tokens | Status |
-|---|---:|---:|---|
-| MADLAD-400 Oromo v0.1 | 18,704 | 17,873,390 | research hold |
+This approval relies on the upstream dataset-level license representation and
+preserves attribution to AllenAI / MADLAD-400. It does **not** claim that Oromo
+AI independently cleared copyright for every underlying Common Crawl page.
+That scope limitation, along with the completed provenance investigation, is
+permanently documented in
+[`MADLAD_400_LICENSE_DECISION.md`](docs/sources/MADLAD_400_LICENSE_DECISION.md).
 
-Accepted OromoCorpus remains **14,492,686** 48K-reference tokens.
+Official v1.5 provenance was independently recovered for **1,917 final
+records / 1,874,398 reference tokens (10.49%)** across **182 domains**. Those
+findings remain part of the audit trail even though the full frozen subset is
+accepted under the upstream dataset license.
 
-MADLAD contributes **17,873,390** additional research-clean tokens to a
-separate technical pool of **32,366,076** tokens, but it is not counted toward
-the accepted OromoCorpus. Provenance is only partially recovered and
-source-level licensing review remains incomplete.
+### HPLT 3.0 qualification
+
+HPLT 3.0 `gaz_Latn` v0.1 is now **accepted/frozen** as the sixth OromoCorpus
+source. The approved subset is restricted to WDS bins **8–10**, passed exact
+and canonical near-deduplication against all previously accepted sources,
+passed structural review, and was fully checked with GlotLID v3. The final
+artifact contains **26,655 records / 19,771,727 48K-reference tokens** across
+**1,091 unique source domains**.
+
+HPLT publishes the dataset packaging under **CC0**, while explicitly stating
+that it does not own the underlying extracted text. Oromo AI therefore records
+the underlying individual-content rights as **not independently verified** and
+does not represent every source webpage as CC0. See
+[`HPLT3_LICENSE_DECISION.md`](docs/sources/HPLT3_LICENSE_DECISION.md).
 
 ```text
 OromoCorpus v0.2 minimum: 50,000,000 tokens
-Current planning total:   14,492,686
-Progress:                 28.99%
-Remaining:                35,507,314
+Current planning total:   52,137,803
+Progress:                 104.28%
+Margin above minimum:      2,137,803
 
 OromoCorpus v0.3 target: 100,000,000 tokens
-Current progress:         14.49%
+Current progress:         52.14%
 ```
 
 The full WURA Oromo package remains under source-level review and does not count as an accepted source by itself. Only independently audited and rights-cleared subsets are admitted.
 
-The next corpus-expansion priority is to identify rights-clear sources or publisher clusters capable of contributing roughly **5M–15M+ net-new tokens**, while still accepting smaller sources when they add important domain or dialect diversity.
+With the 50M minimum now achieved, corpus acquisition continues toward the preferred **100M** target with greater emphasis on domain, dialect, literary, educational, technical, and conversational diversity rather than raw volume alone.
 
 ### OromoTokenizer
 
@@ -218,13 +234,14 @@ The repository is research infrastructure under active development; commands and
 ✅ WaxalNLP Oromo ASR source qualified
 ✅ MADLAD-400 Oromo technical and quality qualification complete
 ✅ MADLAD-400 Oromo provenance recovery: 1,917 records / 1,874,398 tokens mapped
-⏸️ MADLAD-400 Oromo remains research HOLD; 16,787 records / 15,998,992 tokens unresolved
+✅ MADLAD-400 Oromo v0.2 approved under upstream ODC-BY dataset license
 ✅ Frozen tokenizer evaluation set
 ✅ Custom tokenizer benchmark
 ✅ Native causal-tokenizer benchmark
 ✅ Whole-word augmentation study
 
-🔄 Expand OromoCorpus toward 50M net unique tokens
+✅ OromoCorpus 50M minimum achieved — 52,137,803 reference tokens
+🔄 Expand OromoCorpus toward the preferred 100M target
 🔄 Select OromoLM base-model + tokenizer strategy
 🔄 Develop OromoBench
 
@@ -252,7 +269,10 @@ Detailed technical material lives in `docs/` rather than being duplicated in thi
 | [Tokenizer Research Report](docs/TOKENIZER_RESEARCH_REPORT.md) | Tokenizer benchmarks and experiments |
 | [Evaluation](docs/EVALUATION.md) | OromoBench evaluation direction |
 | [Roadmap](docs/ROADMAP.md) | Project phases and current milestone |
+| [MADLAD License Decision](docs/sources/MADLAD_400_LICENSE_DECISION.md) | ODC-BY approval basis, attribution obligations, and scope limitations |
 | [MADLAD Provenance Review](docs/sources/MADLAD400_PROVENANCE_REVIEW.md) | Partial source-level provenance recovery, URL/domain audit, and VOA review |
+| [HPLT3 Oromo Report](docs/sources/HPLT3_OROMO_REPORT.md) | HPLT3 filtering, deduplication, quality, language verification, and frozen metrics |
+| [HPLT3 License Decision](docs/sources/HPLT3_LICENSE_DECISION.md) | CC0 packaging scope, underlying-text caveat, and project acceptance basis |
 | [Naming](docs/NAMING.md) | Canonical project naming |
 
 Source-specific qualification reports are maintained under [`docs/sources/`](docs/sources/).
