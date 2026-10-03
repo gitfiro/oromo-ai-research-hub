@@ -5,17 +5,17 @@
 
 **Research phase:** Tokenizer baseline and custom-candidate evaluation  
 **Corpus version:** `afriberta_oromo_v0.1.2`  
-**Status:** Baseline complete; custom candidates benchmarked; causal-LM tokenizer benchmarking next
+**Status:** Core tokenizer research complete; cleaned Gemma +8K frozen and validated in first CPT pilot
 
 ---
 
 ## 1. Purpose
 
-This report records the reproducible OromoTokenizer research completed before Oromo AI begins OromoLM continued-pretraining experiments.
+This report records the reproducible OromoTokenizer research from pre-CPT tokenizer benchmarking through the first controlled OromoLM continued-pretraining proof.
 
 The project does **not** assume that a custom tokenizer is automatically preferable. The objective is to measure how efficiently established and Oromo-specialized tokenizers represent Afaan Oromoo, identify failure modes, and preserve enough evidence to make the later base-model/tokenizer decision deliberately.
 
-The current decision sequence remains:
+The research sequence now stands at:
 
 ```text
 Validated corpus
@@ -28,12 +28,18 @@ Custom tokenizer candidates
       ↓
 Causal-LM tokenizer benchmarks
       ↓
-Tokenizer/base-model decision
+Whole-word / internal-subword experiments
       ↓
-Tiny CPT proof
+Cleaned Gemma +8K freeze
+      ↓
+Embedding initialization audit
+      ↓
+Controlled native-vs-+8K CPT proof
+      ↓
+Exact normalized evaluation + longer CPT
 ```
 
-No tokenizer has been declared the final production tokenizer yet.
+No tokenizer has been declared the final production tokenizer yet. Gemma +8K is currently a validated training candidate, not a final production freeze.
 
 ---
 
@@ -501,44 +507,239 @@ This is the key Phase 4B1 finding.
 **Established facts:**
 
 - the production corpus and frozen tokenizer holdout remain unchanged;
-- OromoTokenizer 32K-byte and 48K-byte candidates are strong sequence-efficiency references;
-- the custom 48K-byte tokenizer remains the best measured sequence-efficiency reference at 1.4000 tokens/word;
-- all tested causal tokenizers have zero unknowns on the current holdout;
-- all tested causal tokenizers impose substantial Oromo token inflation;
-- Gemma 3 has the strongest native causal tokenizer tested so far;
-- whole-word augmentation substantially improves Llama, Qwen3, and Gemma;
-- +2K to +4K captures much of the early word-fragmentation gain;
-- whole-word augmentation does not recover the custom tokenizer's full subword efficiency.
+- OromoTokenizer 32K-byte and 48K-byte candidates remain sequence-efficiency research references;
+- Gemma 3 has the strongest native causal tokenizer among the tested causal families;
+- whole-word augmentation substantially improves frequent Oromo lexical representation while preserving native token IDs;
+- the generic internal-subword `AddedToken(single_word=False)` approach is rejected because it increases total sequence length;
+- the cleaned whole-word v2 candidate gate removes mixed-case extraction concatenations before vocabulary freeze;
+- Gemma +8K has been frozen as a model-level training candidate;
+- the frozen Gemma +8K candidate reduces the 10K tokenizer holdout from 2.7855 to 2.2907 tokens/word (17.77%);
+- the six-source CPT workload audit measures a 15.70% train-token reduction and 15.71% validation-token reduction;
+- the first controlled A100 CPT pilot measures an 18.12% training wall-time reduction for +8K on the same underlying text;
+- model-quality parity has not yet been established.
 
-**Not yet decided:**
+**Still open:**
 
-- final causal base model;
-- final tokenizer strategy;
-- final augmentation budget;
-- whether Phase 4B2 should introduce Oromo-specific subword augmentation;
-- whether full tokenizer replacement is justified;
-- embedding initialization strategy for any appended vocabulary;
-- exact CPT configuration.
+- final production tokenizer;
+- final production causal base model;
+- whether additional CPT closes the current normalized-likelihood gap;
+- whether +4K or +8K is the better long-run quality/compute frontier;
+- whether full tokenizer replacement is ever justified;
+- exact byte-normalized likelihood from a dedicated evaluator;
+- catastrophic-forgetting behavior.
 
 ---
 
-## 17. Next milestone
+## 17. Model-level gate reached
 
-The next decision should remain tokenizer-only until the architecture is justified:
+The original tokenizer-only sequence has now advanced through the first model-level proof:
 
 ```text
-Phase 4A native causal benchmark      ✅ complete
-Phase 4B1 whole-word augmentation    ✅ complete
-              ↓
-analyze diminishing returns
-              ↓
-estimate embedding/vocabulary cost
-              ↓
-decide on Phase 4B2 subword augmentation
-              ↓
-select base-model + tokenizer strategy
-              ↓
-tiny continued-pretraining proof
+Phase 4A native causal benchmark       ✅ complete
+Phase 4B1 whole-word augmentation     ✅ complete
+Phase 4B2 internal subword test       ✅ complete / rejected
+cleaned whole-word v2 gate            ✅ complete
+Gemma +8K tokenizer freeze            ✅ complete
+embedding initialization audit        ✅ complete
+dual-tokenizer workload audit         ✅ complete
+10-step GPU smoke tests               ✅ complete
+full native-vs-+8K CPT pilot          ✅ complete
+exact summed-NLL / BPB evaluator      ⏳ next
+longer +8K CPT quality validation     ⏳ next
 ```
 
-The project should still avoid SFT, LoRA/QLoRA instruction tuning, and large-scale training until the base-model/tokenizer strategy is resolved with evidence.
+The project should still avoid scaled production training and instruction tuning until normalized quality, forgetting controls, and longer-CPT behavior are evaluated.
+
+Detailed model-level results are recorded in `docs/CPT_PILOT_REPORT.md`.
+
+---
+
+## 18. Phase 4B2 — internal subword augmentation
+
+Phase 4B2 tested whether leakage-safe internal Oromo subword pieces could be
+appended to a pretrained causal tokenizer without replacing its native token
+IDs.
+
+Candidate construction used only the 400,193-record tokenizer-training split
+and the Oromo Unigram 48K byte-fallback SentencePiece reference. The frozen
+10K evaluation holdout was not used to construct or rank corpus frequencies.
+
+Candidate pool:
+
+```text
+reference pieces observed: 9,355,684
+eligible internal piece types: 6,615
+frequency >=20 candidates: 5,030
+candidate SHA-256:
+a6a9ae1279943f461ea6f7b7520028cd4d14ff447b43fa3c895008efa8be15ec
+```
+
+High-frequency pieces included Oromo morphological/internal forms such as
+`tti`, `dha`, `uun`, `tiin`, `dhaan`, `rraa`, `wwan`,
+`rratti`, and `oota`.
+
+Gemma 3 could rank 3,919 candidates as fragmented/useful under the synthetic
+internal-frame ranking test.
+
+Measured Gemma results:
+
+| Budget | Tok/Word | Change vs native | Frag % | Single % | UNK |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Native | 2.7855 | — | 85.91% | 14.09% | 0 |
+| +1K internal | 3.1846 | **14.33% worse** | 75.58% | 24.42% | 0 |
+| +2K internal | 3.0121 | **8.13% worse** | 67.15% | 32.85% | 0 |
+| +3K internal | 2.9184 | **4.77% worse** | 62.18% | 37.82% | 0 |
+
+### Interpretation
+
+The experiment is a negative result.
+
+`AddedToken(single_word=False)` performs tokenizer-level substring matching;
+it does not merge Oromo pieces into Gemma's learned native subword model.
+Consequently the added internal pieces can split text before native
+segmentation. Offset-based word fragmentation improves while total token count
+gets worse.
+
+This distinction is important:
+
+```text
+lower word-fragmentation metric
+does not necessarily imply
+shorter model sequences
+```
+
+### Phase 4B2 decision
+
+The generic internal-`AddedToken` approach is **rejected** and will not be
+repeated on Qwen or Llama.
+
+Viable strategies remaining:
+
+1. native tokenizer;
+2. native tokenizer + whole-word augmentation;
+3. deeper tokenizer replacement/adaptation only if later model-level evidence
+   justifies the disruption.
+
+Phase 4C therefore selects whole-word augmentation for the first model-level
+proof. See `docs/BASE_MODEL_SELECTION_REPORT.md`.
+
+
+
+---
+
+## 19. Cleaned Gemma +8K freeze
+
+After the Phase 4B1 historical candidate list exposed internally mixed-case extraction concatenations, the project rebuilt the lexical candidate pool with the v2 quality gate and froze a cleaned Gemma +8K training candidate.
+
+Frozen artifact:
+
+```text
+tokenizer/augmentation/artifacts/gemma-3-1b-pt-oromo-8k
+```
+
+Frozen benchmark:
+
+| Metric | Native Gemma | Cleaned +8K |
+| --- | ---: | ---: |
+| Tokens/word | 2.7855 | **2.2907** |
+| Reduction | — | **17.77%** |
+| Fragmentation | 85.91% | **32.38%** |
+| Single-token words | 14.09% | **67.62%** |
+| UNK | 0 | 0 |
+
+Artifact provenance:
+
+```text
+clean candidate SHA-256:
+7747fd5f230bcec779324138ac3cc0854f620f92a2284e8757135de3dabfd17f
+
+selected-token ledger SHA-256:
+68ac896b2db54dece77eb677953d03c174b4100368d6da0e351a8b3cb72ae952
+
+benchmark result SHA-256:
+116189d283efae678de1339f9031bab8f7c3a78e47f46b03993929a1737073fb
+
+tokenizer.json SHA-256:
+44f015312316d19ba8337a1807ca26d1a76e868ada0d709f2fb81c2ffce53806
+
+tokenizer_config.json SHA-256:
+dd3333ae52ab7e8d543ca05cfbd0a1e483999e8d39b0b7e05e9b1fe60f26d926
+```
+
+Native tokenizer length is 262,145 while the native Gemma model vocabulary is 262,144 because ID 262,144 is `<image_soft_token>`. The +8K additions begin at ID 262,145 and end at 270,144, producing a final tokenizer/model vocabulary of 270,145.
+
+---
+
+## 20. Embedding initialization evidence
+
+The 8,000 appended rows were not treated as arbitrary random vocabulary.
+
+The selected strategy builds each new row from the centroid of the word's native Gemma subtokens and scales that centroid to the native mean embedding L2 norm.
+
+Behavioral audit:
+
+| Initialization | Logit cosine | KL divergence | Top-20 overlap |
+| --- | ---: | ---: | ---: |
+| HF mean resize | 0.729729 | 10.189774 | 4.10% |
+| Raw centroid | 0.867015 | 8.425408 | 20.62% |
+| **Scaled centroid** | **0.880990** | **7.667944** | **25.23%** |
+
+Selected strategy:
+
+```text
+native_subtoken_centroid_scaled_to_native_mean_l2_norm
+```
+
+Initialization manifest SHA-256:
+
+```text
+5c24eb839da903cbc4c58da365120856f44c352cfe941a9bd0bed529b04f9ac4
+```
+
+---
+
+## 21. Six-source CPT workload audit
+
+The frozen model-level pilot uses all six accepted corpus source families.
+
+On the exact same training text:
+
+| Metric | Native | Oromo +8K | Change |
+| --- | ---: | ---: | ---: |
+| Total train tokens incl. EOS | 5,708,421 | **4,811,939** | **-15.70%** |
+| Tokens/word | 2.8526 | **2.4046** | lower |
+| Characters/token | 2.7221 | **3.2293** | +18.63% |
+| 1024-token sequences | 5,575 | **4,700** | **-15.70%** |
+
+The train-token reduction is present across every source family:
+
+```text
+AfriBERTa: 17.46%
+MADLAD:    14.01%
+Waxal:     17.28%
+HPLT3:     16.08%
+VOA:       16.58%
+omwiki:    13.90%
+```
+
+This establishes that the +8K benefit generalizes beyond the original AfriBERTa tokenizer holdout.
+
+---
+
+## 22. First model-level outcome
+
+The controlled A100 pilot measured:
+
+| Metric | Native Gemma | Oromo +8K | Change |
+| --- | ---: | ---: | ---: |
+| Optimizer steps | 349 | **294** | **-15.76%** |
+| Train wall time | 1,437.05 s | **1,176.71 s** | **-18.12%** |
+| Total wall time | 1,450.93 s | **1,189.96 s** | **-17.99%** |
+| Throughput | 3,972.59 tok/s | **4,090.03 tok/s** | **+2.96%** |
+| Peak reserved VRAM | 12.21 GiB | 12.55 GiB | +2.78% |
+
+This confirms that the +8K tokenizer's sequence savings survive real model training and are not canceled by the 3.05% larger vocabulary.
+
+However, the tokenizer is **not** declared final. A provisional reconstruction normalized against the exact validation bytes currently shows about a 6.23% higher NLL/byte for +8K after one short epoch. A dedicated exact summed-NLL/BPB evaluator and longer CPT are required before making a quality-equivalence claim.
+
+See `docs/CPT_PILOT_REPORT.md` for the complete training, runtime, storage-incident, hashing, and evaluation record.
