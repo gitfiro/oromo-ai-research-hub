@@ -15,9 +15,13 @@ OromoTokenizer research                 ✅
   ↓
 Controlled native-vs-augmented CPT     ✅ first pilot
   ↓
-Exact normalized LM evaluation         🔄
+Exact normalized LM evaluation         ✅
   ↓
-Longer CPT / forgetting controls       🔄 next gate
+Longer +8K CPT / forgetting controls   ✅ v0.3 complete
+  ↓
++4K controlled model-level ablation    🧪 training complete; evaluation pending
+  ↓
+Tokenizer/model Pareto decision
   ↓
 Scale experiments
   ↓
@@ -252,7 +256,7 @@ Detailed report:
 
 ## Phase 4 — Causal-LM tokenizer and base-model research
 
-**Status: core tokenizer strategy experiments complete; Gemma +8K validated as a training candidate**
+**Status: core tokenizer strategy experiments complete; Gemma +8K and +4K are under controlled model-level comparison**
 
 ### Phase 4A — native causal tokenizer benchmark
 
@@ -304,11 +308,74 @@ Phase 4 has now progressed beyond tokenizer-only feasibility:
 - deterministic scaled native-subtoken-centroid initialization was selected for the 8,000 new embeddings;
 - a controlled native-vs-+8K CPT pilot has now been completed.
 
-The first model-level evidence shows that +8K reduces the same-text training workload by 15.70% and measured A100 training wall time by 18.12%, with only a small VRAM increase. Quality equivalence is not yet established: a reconstructed byte-normalized comparison after one pilot epoch currently favors native Gemma by about 6.23% NLL/byte, and an exact summed-NLL/BPB evaluator is still required.
+The first model-level evidence showed that +8K reduces the same-text training workload by 15.70% and measured A100 training wall time by 18.12%, with only a small VRAM increase. That pilot's reconstructed ~6.23% quality estimate is now historical: exact v0.2 BPB measured a 7.47% +8K deficit, and the later v0.3 fresh-data continuation reduced that deficit to only ~0.057% while passing the frozen WikiText retention gate.
 
-Detailed model-level evidence is frozen in `docs/CPT_PILOT_REPORT.md`.
+Detailed evidence is frozen in `docs/CPT_PILOT_REPORT.md`,
+`docs/CPT_RERUN_V0_2_RESULTS.md`, and
+`docs/CPT_LEARNING_CURVE_V0_3_RESULTS.md`.
 
-The base model/tokenizer strategy therefore remains evidence-gated rather than final: Gemma +8K is retained as a validated training candidate while longer CPT and exact normalized evaluation determine whether its quality gap closes.
+The base model/tokenizer strategy therefore remains evidence-gated rather than
+final. Gemma +8K is retained as a validated efficiency-oriented candidate. The
++4K model-level ablation has now completed both predeclared training stages; its
+Stage A exact Oromo BPB was 1.844463004 versus 1.863338883 for +8K at the
+pilot-equivalent point. Final selection waits for the +4K Stage B exact Oromo
+BPB curve and WikiText retention check.
+
+---
+
+## Phase 4C — +8K fresh-data continuation v0.3
+
+**Status: complete**
+
+The Gemma +8K path was continued from the preserved v0.2 checkpoint on a fresh,
+deterministic six-source Oromo continuation set:
+
+```text
+records:          146,038
+whitespace words: 10,039,123
++8K tokens+EOS:   24,078,782
+packed sequences: 23,515
+optimizer steps:  1,470
+pilot train/validation exact-text overlap: 0
+```
+
+Exact Oromo BPB learning curve:
+
+| Step | BPB |
+| ---: | ---: |
+| 250 | 1.799051259 |
+| 500 | 1.758329918 |
+| 750 | 1.741555246 |
+| 1,000 | 1.735902233 |
+| 1,250 | 1.734835917 |
+| 1,470 | **1.734823064** |
+
+The native-tokenizer CPT reference remains **1.733832395 BPB**, leaving the
+final +8K checkpoint about **0.057% higher/worse**. The quality gate was
+therefore not crossed, although the earlier ~7.47% gap was almost entirely
+closed.
+
+The frozen WikiText retention gate also passed:
+
+```text
+untouched Gemma WikiText BPB: 1.013254631
+predeclared +5% ceiling:      1.063917363
+final +8K WikiText BPB:       1.033754855  PASS
+```
+
+The A100 run was copied back to the local research environment and 53 hashed
+files matched the RunPod-generated SHA-256 manifest with zero failures.
+
+Next decision:
+
+- finish exact Stage B evaluation of the completed +4K ablation;
+- compare +4K, +8K, and native-tokenizer CPT on the predeclared quality/retention frontier;
+- only then decide whether any additional fresh-data continuation is justified.
+
+Do not simply repeat the same v0.3 text for another epoch; the +8K late learning
+curve was already nearly flat.
+
+Detailed result: `docs/CPT_LEARNING_CURVE_V0_3_RESULTS.md`.
 
 ---
 
@@ -368,19 +435,38 @@ Full report: `docs/CPT_PILOT_REPORT.md`
 
 ## Phase 6 — Extended OromoLM CPT validation
 
-**Status: next experimental gate**
+**Status: +4K training complete; normalized Stage B evaluation pending**
 
-The first Gemma 1B-class proof is complete. The next phase is not a blind model-size increase; it is a stronger validation of the selected tokenizer/model candidate.
+The first Gemma 1B-class proof, exact v0.2 evaluation, and v0.3 fresh-data +8K
+learning curve are complete. The next phase is not a blind model-size increase;
+it is a controlled quality/efficiency follow-up comparing additional fresh-data
++8K adaptation against a +4K model-level ablation.
 
-Required work:
+Exact three-way document-reset BPB evaluation is now complete on the frozen 1,503-record Oromo validation set:
 
-- implement exact summed-NLL / bits-per-byte evaluation on identical underlying text;
-- run longer Gemma +8K CPT to measure whether newly added lexical embeddings close the current normalized-likelihood gap;
-- preserve a native baseline/control where needed;
-- add a general-language control set for catastrophic-forgetting measurement;
-- report source-level validation across AfriBERTa, omwiki, VOA, Waxal, MADLAD, and HPLT3;
-- record wall-clock time, tokens/sec, words/sec, characters/sec, VRAM, and optimizer-step accounting;
-- decide whether a +4K ablation is needed to characterize the quality/compute frontier.
+| Model state | Exact BPB |
+| --- | ---: |
+| Original Gemma | 2.670046 |
+| Native tokenizer + Oromo CPT | **1.733832** |
+| OromoLM +8K + Oromo CPT | 1.863339 |
+
+The native-tokenizer CPT arm is the current quality benchmark. OromoLM +8K improves substantially over base Gemma but remains approximately **7.47% higher/worse in BPB** than native-tokenizer CPT after one epoch.
+
+Current state:
+
+- frozen general-language control and +5% retention ceiling established;
+- +8K bounded fresh-data continuation completed and evaluated through step 1,470;
+- +4K two-stage ablation training completed through step 1,517;
+- +4K Stage A exact Oromo BPB measured at **1.844463004**;
+- +4K Stage B checkpoints and final model preserved with **66/66 files verified**.
+
+Required next work:
+
+- run exact Oromo BPB on +4K Stage B checkpoints 250/500/750/1000/1250/1500/1517;
+- run WikiText retention on the +4K checkpoint(s) considered for final selection;
+- report source-level Oromo validation for the selected candidates;
+- compare +4K, +8K, and native CPT as a Pareto frontier rather than forcing a scalar score;
+- decide the tokenizer/model path before scaled CPT.
 
 Only after this phase should the project decide whether to keep Gemma +8K, revisit another base family, alter augmentation budget, or proceed toward scaled CPT.
 
@@ -514,10 +600,14 @@ The project is currently here:
 ✅ Dual-tokenizer workload audit + deterministic packing
 ✅ Native-vs-+8K 10-step GPU smoke tests
 ✅ First controlled Gemma native-vs-+8K CPT pilot
+✅ Exact summed-NLL / BPB evaluation
+✅ +8K v0.3 fresh-data continuation + retention gate
+✅ +4K two-stage model-level ablation training
+✅ +4K Stage A exact BPB: 1.844463004
         ↓
-🔄 Exact summed-NLL / BPB evaluation
+🔄 +4K Stage B exact BPB curve + WikiText retention
         ↓
-🔄 Longer +8K CPT to test quality-gap closure
+🔄 Final +4K vs +8K vs native Pareto decision
         ↓
 🔄 Expand accepted OromoCorpus from 52.14M toward the preferred 100M target
         ↓

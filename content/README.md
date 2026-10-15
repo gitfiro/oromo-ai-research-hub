@@ -55,8 +55,8 @@ The goal is not to build a quick chatbot. The goal is to create reusable, docume
 | Component | Purpose | Status |
 | --- | --- | --- |
 | **OromoCorpus** | Versioned, provenance-tracked Afaan Oromoo training corpus | ✅ 50M minimum achieved; expanding toward 100M |
-| **OromoTokenizer** | Tokenization research and Oromo-aware tokenizer candidates | ✅ Gemma +8K training candidate validated |
-| **OromoLM** | Continued-pretrained Afaan Oromoo causal language models | 🧪 First controlled CPT pilot complete |
+| **OromoTokenizer** | Tokenization research and Oromo-aware tokenizer candidates | 🧪 Gemma +8K and +4K model-level candidates under controlled comparison |
+| **OromoLM** | Continued-pretrained Afaan Oromoo causal language models | 🧪 +8K v0.3 near-parity complete; +4K two-stage ablation training complete, final evaluation pending |
 | **OromoBench** | Afaan Oromoo evaluation framework | 🔄 In development |
 
 Canonical naming is documented in [`docs/NAMING.md`](docs/NAMING.md).
@@ -155,9 +155,38 @@ The first controlled model-level CPT comparison is complete on `google/gemma-3-1
 
 The comparison ran on the same NVIDIA A100-SXM4-80GB environment with sequence length 1024, BF16, gradient accumulation 16, and one epoch of identical underlying text exposure.
 
-The efficiency result is positive, but final tokenizer selection remains open. Raw token-level eval loss is not comparable across different tokenizations. A reconstruction normalized by the exact validation bytes currently places the +8K arm about **6.23% higher in NLL/byte after one pilot epoch**, but this is not yet an exact dedicated BPB measurement. The next gate is exact summed-NLL/BPB evaluation plus additional CPT to test whether the newly added lexical embeddings close that gap.
+The efficiency result remains positive, but final tokenizer selection remains open. Exact document-reset, byte-normalized evaluation is now complete on the same frozen 1,503-record Oromo validation set:
 
-Full experiment record: [`docs/CPT_PILOT_REPORT.md`](docs/CPT_PILOT_REPORT.md).
+| Model state | Exact BPB | Relative to base |
+| --- | ---: | ---: |
+| Original `google/gemma-3-1b-pt` | 2.670046 | baseline |
+| Native tokenizer + Oromo CPT | **1.733832** | **-35.06%** |
+| OromoLM +8K + Oromo CPT | 1.863339 | **-30.21%** |
+
+Lower BPB is better. This establishes that OromoCorpus continued pretraining substantially improves held-out Afaan Oromoo modeling.
+
+A later fresh-data +8K continuation experiment (v0.3) closed almost all of the remaining quality gap:
+
+| +8K v0.3 step | Exact Oromo BPB |
+| ---: | ---: |
+| 250 | 1.799051 |
+| 500 | 1.758330 |
+| 750 | 1.741555 |
+| 1,000 | 1.735902 |
+| 1,250 | 1.734836 |
+| 1,470 | **1.734823** |
+
+The native-tokenizer CPT benchmark remains **1.733832395 BPB**. The best +8K v0.3 checkpoint therefore remains just above it by about **0.057%**, so the project does **not** claim a +8K quality win yet.
+
+General-language retention remained within the predeclared gate. Untouched Gemma scored **1.013254631 WikiText BPB**, setting a +5% ceiling at **1.063917363**; the final +8K checkpoint scored **1.033754855** and passed.
+
+The v0.3 result was preserved locally from the A100 environment and **53/53 hashed files matched with zero integrity failures**.
+
+A controlled **Gemma +4K model-level ablation** has now also completed both predeclared training stages. At the pilot-equivalent Stage A checkpoint, +4K measured **1.844463004 exact Oromo BPB**, improving on the +8K Stage A result of **1.863338883** by about **1.01%**, while remaining about **6.38% above/worse than native-tokenizer CPT**. Stage B completed the full fresh 10.039M-word continuation and produced checkpoints through step **1,517**; its exact Oromo BPB learning curve and WikiText retention evaluation are still pending, so no final +4K-vs-+8K winner is claimed.
+
+The complete +4K run was copied back from RunPod and verified against its preservation manifest: **66 files checked, 0 failures**, totaling about **18 GB** locally. Large model artifacts remain outside normal Git tracking.
+
+Full experiment records: [`docs/CPT_PILOT_REPORT.md`](docs/CPT_PILOT_REPORT.md), [`docs/CPT_RERUN_V0_2_RESULTS.md`](docs/CPT_RERUN_V0_2_RESULTS.md), [`docs/CPT_LEARNING_CURVE_V0_3_RESULTS.md`](docs/CPT_LEARNING_CURVE_V0_3_RESULTS.md), and [`docs/CPT_4K_ABLATION_RESULTS.md`](docs/CPT_4K_ABLATION_RESULTS.md).
 
 ### Build verification
 
@@ -264,7 +293,11 @@ The repository is research infrastructure under active development; commands and
 
 ✅ OromoCorpus 50M minimum achieved — 52,137,803 reference tokens
 🔄 Expand OromoCorpus toward the preferred 100M target
-🔄 Exact byte-normalized LM evaluation + longer CPT validation
+✅ Exact byte-normalized three-way LM evaluation
+✅ +8K v0.3 fresh-data learning curve + forgetting controls
+✅ +4K two-stage CPT ablation training complete
+🔄 +4K exact Stage B Oromo BPB curve + WikiText retention evaluation
+🔄 Final +4K vs +8K vs native Pareto decision
 🔄 Develop OromoBench
 
 ✅ Tiny CPT proof
@@ -290,6 +323,9 @@ Detailed technical material lives in `docs/` rather than being duplicated in thi
 | [Cleaning Policy](docs/CLEANING_POLICY.md) | Conservative preprocessing rules |
 | [Tokenizer Research Report](docs/TOKENIZER_RESEARCH_REPORT.md) | Tokenizer benchmarks and experiments |
 | [CPT Pilot Report](docs/CPT_PILOT_REPORT.md) | Gemma native-vs-+8K workload, GPU, quality, and reproducibility evidence |
+| [CPT Reproduction v0.2 Results](docs/CPT_RERUN_V0_2_RESULTS.md) | Exact three-way Oromo BPB results, rerun hashes, and next quality gate |
+| [CPT +4K Ablation Protocol](docs/CPT_4K_ABLATION_PROTOCOL.md) | Predeclared two-stage +4K comparison design and decision rules |
+| [CPT +4K Ablation Results](docs/CPT_4K_ABLATION_RESULTS.md) | Completed training status, Stage A BPB, preservation evidence, and pending Stage B evaluation |
 | [Evaluation](docs/EVALUATION.md) | OromoBench and normalized model-evaluation direction |
 | [Roadmap](docs/ROADMAP.md) | Project phases and current milestone |
 | [MADLAD License Decision](docs/sources/MADLAD_400_LICENSE_DECISION.md) | ODC-BY approval basis, attribution obligations, and scope limitations |
