@@ -19,7 +19,7 @@ Exact normalized LM evaluation         ✅
   ↓
 Longer +8K CPT / forgetting controls   ✅ v0.3 complete
   ↓
-+4K controlled model-level ablation    🧪 training complete; evaluation pending
++4K controlled model-level ablation    ✅ gate complete; strongest current candidate
   ↓
 Tokenizer/model Pareto decision
   ↓
@@ -435,7 +435,7 @@ Full report: `docs/CPT_PILOT_REPORT.md`
 
 ## Phase 6 — Extended OromoLM CPT validation
 
-**Status: +4K training complete; normalized Stage B evaluation pending**
+**Status: +4K gate complete; strongest current tokenizer/model candidate selected**
 
 The first Gemma 1B-class proof, exact v0.2 evaluation, and v0.3 fresh-data +8K
 learning curve are complete. The next phase is not a blind model-size increase;
@@ -458,15 +458,23 @@ Current state:
 - +8K bounded fresh-data continuation completed and evaluated through step 1,470;
 - +4K two-stage ablation training completed through step 1,517;
 - +4K Stage A exact Oromo BPB measured at **1.844463004**;
+- +4K Stage B exact Oromo BPB measured through step 1,517;
+- +4K crossed both native CPT and +8K by step 750;
+- best measured +4K Oromo BPB: **1.720890950** at step 1,517;
+- +4K WikiText retention PASS at steps 1,250 (**1.030453326**) and 1,517 (**1.030463994**);
 - +4K Stage B checkpoints and final model preserved with **66/66 files verified**.
+
+Decision:
+
+**Gemma +4K is the strongest current tokenizer/model candidate under the frozen evaluation gate.**
 
 Required next work:
 
-- run exact Oromo BPB on +4K Stage B checkpoints 250/500/750/1000/1250/1500/1517;
-- run WikiText retention on the +4K checkpoint(s) considered for final selection;
-- report source-level Oromo validation for the selected candidates;
-- compare +4K, +8K, and native CPT as a Pareto frontier rather than forcing a scalar score;
-- decide the tokenizer/model path before scaled CPT.
+- preserve and hash the new Stage B Oromo/WikiText evaluation outputs;
+- complete source-level and paired per-record analysis;
+- expand OromoBench and downstream generation/human evaluation;
+- use +4K as the leading path when designing the next scaled CPT experiment, unless new evidence overturns it;
+- do not spend more compute repeating the same plateaued continuation text.
 
 Only after this phase should the project decide whether to keep Gemma +8K, revisit another base family, alter augmentation budget, or proceed toward scaled CPT.
 
@@ -589,8 +597,13 @@ The project is currently here:
 ✅ MADLAD recovered-domain inventory: 182 domains
 ✅ MADLAD-400 Oromo v0.2 approved under upstream ODC-BY dataset license
 ✅ HPLT 3.0 gaz_Latn v0.1 approved/frozen: 26,655 records / 19,771,727 tokens
+✅ Michsethowusu Oromo Sentiments cleaned subset approved: 193,681 records / 3,877,136 tokens
+✅ Michsethowusu English–Oromo cleaned monolingual subset approved: 45,048 records / 1,185,406 tokens
+✅ Glot500 Oromo source-partitioned subset approved: 80,069 records / 5,913,656 tokens; mtdata held
+✅ Official CC100 Oromo audit closed: 5,603-row residual preserved but not promoted due to redundancy
+🔄 Mozilla Common Voice Oromo 27.0 downloaded; transcript extraction/dedup resumes next session
 ✅ 50M minimum corpus milestone achieved
-✅ Current accepted 48K-reference corpus measurement: 52,137,803 tokens
+✅ Current accepted 48K-reference corpus measurement: 63,114,001 tokens
 ✅ Frozen tokenizer evaluation
 ✅ Multilingual/custom tokenizer baselines
 ✅ Native causal-LM tokenizer benchmark (Phase 4A)
@@ -604,16 +617,15 @@ The project is currently here:
 ✅ +8K v0.3 fresh-data continuation + retention gate
 ✅ +4K two-stage model-level ablation training
 ✅ +4K Stage A exact BPB: 1.844463004
+✅ +4K Stage B exact BPB curve complete
+✅ +4K WikiText retention PASS
+✅ +4K selected over +8K/native under frozen gate
         ↓
-🔄 +4K Stage B exact BPB curve + WikiText retention
-        ↓
-🔄 Final +4K vs +8K vs native Pareto decision
-        ↓
-🔄 Expand accepted OromoCorpus from 52.14M toward the preferred 100M target
+🔄 Expand accepted OromoCorpus from 63.11M toward the preferred 100M target
         ↓
 🔄 Improve corpus domain/dialect balance while expanding toward 100M / publisher cluster
 ```
 
-The immediate data task is to identify and audit the next high-yield, rights-clear Afaan Oromoo source or publisher cluster while preserving the partially recovered MADLAD provenance evidence. Each new source must pass provenance review, conservative quality processing, exact and near cross-source deduplication, and source-level manifest/report freezing before its tokens are added to the planning total.
+The immediate data task is to resume Mozilla Common Voice Oromo 27.0 transcript extraction and qualification, then continue identifying additional high-yield, rights-clear Afaan Oromoo source families while preserving the partially recovered MADLAD provenance evidence. Each new source must pass provenance review, conservative quality processing, exact and near cross-source deduplication, and source-level manifest/report freezing before its tokens are added to the planning total.
 
 Tokenizer/base-model research may continue in parallel, and a tiny CPT proof may validate the training architecture, but scaled continued pretraining waits for an evidence-backed expanded corpus.

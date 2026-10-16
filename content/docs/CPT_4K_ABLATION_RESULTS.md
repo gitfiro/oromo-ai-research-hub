@@ -2,11 +2,11 @@
 
 ## Status
 
-**Training complete; final normalized evaluation pending.**
+**Training and frozen evaluation complete; +4K is the strongest current candidate under the predeclared gate.**
 
 The +4K vocabulary-size ablation has completed both predeclared training stages on an NVIDIA A100-SXM4-80GB. The experiment preserves the same underlying Oromo text exposure as the +8K trajectory while using the smaller 4,000-token lexical augmentation.
 
-No final tokenizer/model winner is claimed yet. Stage B exact Oromo BPB and WikiText retention evaluation remain required.
+The Stage B exact Oromo BPB learning curve and frozen WikiText retention checks are complete. The +4K path beats both the native-tokenizer CPT and +8K v0.3 Oromo BPB references while passing the predeclared general-language retention ceiling.
 
 ## Frozen +4K tokenizer and initialization
 
@@ -141,7 +141,43 @@ Stage B completed the full predeclared one-epoch fresh-data continuation and pro
 
 A separate final model was also preserved.
 
-The Stage B exact Oromo BPB learning curve has **not yet been run**, and the WikiText retention gate has **not yet been evaluated** for the +4K candidates. Therefore no Stage B quality ranking is reported here yet.
+The Stage B exact Oromo BPB learning curve is complete:
+
+| Checkpoint | Exact Oromo BPB |
+| ---: | ---: |
+| 250 | 1.781058836 |
+| 500 | 1.744201370 |
+| 750 | **1.727396376** |
+| 1000 | **1.721889019** |
+| 1250 | **1.720904266** |
+| 1500 | **1.720890953** |
+| 1517 | **1.720890950** |
+
+Reference lines:
+
+```text
+native CPT: 1.733832395
++8K v0.3:   1.734823064
+```
+
+The +4K path crosses both references by checkpoint 750. Checkpoint 1517 is the lowest measured Oromo BPB, but the curve is effectively flat from 1250 onward.
+
+Frozen WikiText retention:
+
+| Checkpoint | WikiText BPB | Gate |
+| ---: | ---: | --- |
+| 1250 | **1.030453326** | PASS |
+| 1517 | **1.030463994** | PASS |
+
+```text
+untouched Gemma WikiText: 1.013254631
+predeclared +5% ceiling:  1.063917363
++8K v0.3 final:           1.033754855
+```
+
+Both +4K candidates pass comfortably, and both are slightly lower/better on WikiText than the +8K final checkpoint.
+
+Under the predeclared rules, **+4K is the strongest current candidate** because it beats the native CPT and +8K Oromo quality references while passing the retention gate. This selection is specific to the declared evaluation protocol and does not substitute for downstream OromoBench, generation, safety, or human evaluation.
 
 ## Runtime environment note
 
@@ -186,18 +222,112 @@ The preserved set includes:
 
 Large model artifacts remain intentionally outside normal Git tracking.
 
-## Remaining decision work
+## Decision
 
-Run the exact frozen evaluation protocol on all retained Stage B checkpoints, then apply the predeclared decision rules from `docs/CPT_4K_ABLATION_PROTOCOL.md`.
+The predeclared +4K ablation gate is closed.
 
-Required next measurements:
+Current ordering on frozen Oromo BPB:
 
-1. exact Oromo BPB at Stage B checkpoints 250/500/750/1000/1250/1500/1517;
-2. WikiText BPB for the checkpoint(s) considered for final selection;
-3. comparison against:
-   - native CPT: 1.733832395 Oromo BPB;
-   - +8K v0.3: 1.734823064 Oromo BPB;
-   - WikiText retention ceiling: 1.063917363 BPB;
-4. final Pareto analysis covering quality, vocabulary size, tokenizer efficiency, and compute.
+```text
++4K step 1517: 1.720890950
++4K step 1250: 1.720904266
+native CPT:     1.733832395
++8K v0.3:       1.734823064
+untouched base: 2.670045532
+```
 
-Until those measurements are complete, +4K is a **promising but unelected candidate**.
+Retention gate:
+
+```text
++4K step 1250 WikiText: 1.030453326 PASS
++4K step 1517 WikiText: 1.030463994 PASS
+ceiling:                  1.063917363
+```
+
+Because step 1250 and step 1517 are effectively tied on Oromo BPB, future release selection should consider checkpoint size, training cost, downstream evaluation, and reproducibility rather than assuming the numerically smallest BPB difference is practically meaningful.
+
+Next work:
+
+1. preserve the new Stage B Oromo and WikiText evaluation JSON outputs with hashes;
+2. run source-level and paired per-record analysis;
+3. expand OromoBench and generation/human evaluation;
+4. use +4K as the leading tokenizer/model path for the next scaled CPT design unless later evidence overturns it;
+5. avoid additional epochs over the same continuation text, because the learning curve has plateaued.
+
+
+## Source-level and paired-record analysis
+
+The preserved exact-BPB outputs were compared across the native CPT baseline,
++8K v0.3 final checkpoint, and +4K step 1517 on the same 1,503-record Oromo
+validation set.
+
+### Per-source Oromo BPB
+
+| Source | Native CPT | +8K v0.3 | +4K step 1517 | +4K vs native | +4K vs +8K |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| AfriBERTa Oromo v0.1.2 | 2.069977 | 2.086606 | **2.045153** | **-1.199%** | **-1.987%** |
+| MADLAD-400 Oromo v0.2 | 1.647904 | 1.648041 | **1.640854** | **-0.428%** | **-0.436%** |
+| WaxalNLP Oromo ASR v2 | 1.772030 | 1.772162 | **1.750583** | **-1.210%** | **-1.218%** |
+| HPLT3 gaz_Latn v0.1 | 1.640245 | 1.634172 | **1.627110** | **-0.801%** | **-0.432%** |
+| VOA Afaan Oromoo | 1.773451 | 1.770278 | **1.761404** | **-0.679%** | **-0.501%** |
+| Wikimedia omwiki v0.1 | **1.671917** | 1.679502 | 1.677692 | +0.345% | **-0.108%** |
+
+Interpretation:
+
+- +4K beats +8K on **all six** source groups.
+- +4K beats native CPT on **five of six** source groups.
+- The only source-level regression relative to native CPT is Wikimedia, where
+  +4K is **0.345% higher/worse**.
+- The aggregate win is therefore not driven by a single dominant source; it is
+  distributed across AfriBERTa, MADLAD, Waxal, HPLT3 and VOA, with a small
+  Wikimedia tradeoff.
+
+### Paired-record comparison
+
+All three reports contain the same 1,503 validation records and all 1,503 were
+matched by text SHA-256.
+
+| Comparison | +4K better | +4K worse | Ties | +4K win rate | Median BPB delta | Mean BPB delta |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| +4K vs native CPT | 860 | 643 | 0 | **57.22%** | **-0.012094948** | **-0.013883567** |
+| +4K vs +8K v0.3 | 1,086 | 417 | 0 | **72.26%** | **-0.033670352** | **-0.048155481** |
+
+Negative deltas favor +4K.
+
+These paired results strengthen the aggregate conclusion: +4K improves a
+majority of individual validation records versus native CPT and a substantial
+majority versus +8K. They also make clear that the improvement is not universal;
+643 records remain worse than native CPT and Wikimedia remains the one
+source-level regression. The next analysis should therefore quantify uncertainty
+and inspect the tails rather than treating the aggregate BPB win as uniform.
+
+
+## Paired bootstrap uncertainty
+
+A paired bootstrap was run over the 1,503 matched validation records using
+10,000 resamples and fixed seed `20261016`. Each bootstrap replicate sampled
+paired record-level BPB deltas with replacement.
+
+Results:
+
+| Comparison | Mean paired BPB delta | 95% bootstrap CI | Direction |
+| --- | ---: | ---: | --- |
+| +4K vs native CPT | **-0.013883567** | **[-0.020199325, -0.007414796]** | favors +4K |
+| +4K vs +8K v0.3 | **-0.048155481** | **[-0.053106421, -0.043233026]** | favors +4K |
+
+Negative deltas favor +4K. In both comparisons, the full 95% bootstrap interval
+remains below zero.
+
+Interpretation:
+
+- The observed +4K advantage is not supported only by the aggregate corpus BPB;
+  it is also stable under paired resampling of the frozen validation records.
+- This materially strengthens the evidence that +4K is better than both native
+  CPT and +8K on this specific frozen holdout and evaluation protocol.
+- This is not a universal statistical guarantee for all Afaan Oromoo domains,
+  prompts, or downstream tasks. Wikimedia remains a small source-level
+  regression versus native CPT, and 643/1,503 individual records are still
+  worse than native CPT.
+- The next useful analysis is the regression tail: identify the largest
+  +4K-vs-native and +4K-vs-+8K degradations, inspect their sources/text
+  properties, and convert recurring failure modes into OromoBench cases.

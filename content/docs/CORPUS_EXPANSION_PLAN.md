@@ -15,7 +15,7 @@ The project optimizes for quality, diversity, licensing clarity, and reproducibi
 
 ## Current Measured Progress — 2026-09-27
 
-The current accepted multi-source corpus measures **52,137,803 tokens** under the Oromo Unigram 48K + byte-fallback tokenizer used as a planning reference. The 50M v0.2 minimum has been achieved; expansion now continues toward the preferred 100M target. This tokenizer is not yet the final OromoLM tokenizer, so the number is a versioned planning measurement rather than the final release count.
+The current accepted multi-source corpus measures **63,114,001 tokens** under the Oromo Unigram 48K + byte-fallback tokenizer used as a planning reference. The 50M v0.2 minimum has been achieved; expansion now continues toward the preferred 100M target. This tokenizer is not yet the final OromoLM tokenizer, so the number is a versioned planning measurement rather than the final release count.
 
 | Source | Final accepted records | 48K reference tokens | Registry status |
 | --- | ---: | ---: | --- |
@@ -25,7 +25,37 @@ The current accepted multi-source corpus measures **52,137,803 tokens** under th
 | WaxalNLP Oromo ASR v0.1 | 44,194 | 1,934,045 | approved |
 | MADLAD-400 Oromo v0.2 | 18,704 | 17,873,390 | approved — ODC-BY |
 | HPLT 3.0 gaz_Latn v0.1 | 26,655 | 19,771,727 | approved — CC0 packaging / underlying-text caveat |
-| **Accepted total** | **511,510** | **52,137,803** | — |
+| Michsethowusu Oromo Sentiments cleaned subset v0.1 | 193,681 | 3,877,136 | approved cleaned subset — MIT |
+| Michsethowusu English–Oromo cleaned monolingual subset v0.1 | 45,048 | 1,185,406 | approved monolingual subset — NLLB/ODC-BY basis |
+| **Accepted total** | **750,239** | **63,114,001** | — |
+
+### Michsethowusu Oromo Sentiments cleaned subset
+
+The upstream sentiment corpus was heavily filtered rather than accepted wholesale.
+From 825,272 upstream rows, 282,604 passed the first Oromo/noise screen; 77,384
+exact cross-source duplicates and 11,539 additional near duplicates were then
+removed. The frozen accepted subset contains **193,681 records / 3,877,136
+48K-reference tokens**.
+
+Final artifact SHA-256:
+
+`c816cd962170c50ed49f00c04951762b12391c772d52e7058ddb9a778f2afc01`
+
+The dataset-level license is recorded as MIT. Approval applies only to the cleaned
+subset. See `docs/sources/MICHSETHOWUSU_OROMO_SENTIMENTS_REPORT.md`.
+
+### Michsethowusu English–Oromo cleaned monolingual subset
+
+The upstream NLLB-derived sentence-pair dataset was not accepted as a parallel
+translation corpus. After conservative Oromo-side screening, exact cross-source
+deduplication, and canonical 5-word-shingle near deduplication at Jaccard 0.85,
+the final monolingual residual contains **45,048 records / 1,185,406
+48K-reference tokens**.
+
+The frozen artifact SHA-256 is
+`2c540ab00da91a78eaec021c859cc583e48a039c5a30c59d253a77827bdd7324`.
+The NLLB licensing basis is ODC-BY with original-source terms still applicable.
+See `docs/sources/MICHSETHOWUSU_ENGLISH_OROMO_REPORT.md`.
 
 ### MADLAD-400 licensing decision
 
@@ -61,17 +91,17 @@ underlying extracted text. Oromo AI records underlying individual-content
 rights as not independently verified. See
 `docs/sources/HPLT3_LICENSE_DECISION.md`.
 
-Accepted OromoCorpus: **52,137,803**
+Accepted OromoCorpus: **63,114,001**
 
-Margin above 50M: **2,137,803**
+Margin above 50M: **13,114,001**
 
 Progress:
 
 ```text
-50M minimum:  104.28% complete — achieved
-margin:        2,137,803 reference tokens
+50M minimum:  114.40% complete — achieved
+margin:        13,114,001 reference tokens
 
-100M target:   52.14% complete
+100M target:   63.11% complete
 ```
 
 `castorini-wura-orm` remains `reviewing`. WURA is used as a provenance-discovery layer; only source subsets that independently pass rights review and the full acceptance pipeline count toward OromoCorpus.
@@ -242,3 +272,29 @@ In addition to the v0.2 gates:
 > **Fifty million diverse, traceable, deduplicated tokens are more valuable than one hundred million repeated or legally ambiguous tokens.**
 
 Corpus growth must remain compatible with the project's core rule: data before model, evidence before scale.
+
+
+## Current candidate queue — 2026-10-16
+
+### Official CC100 Oromo
+
+**Status: audit complete; not promoted.**
+
+After filtering, exact cross-source deduplication removed 108,285 of 121,497
+rows (89.13%). Canonical near deduplication then removed 7,609 of the 13,212
+exact-net-new rows. The remaining **5,603 rows / 194,669 words** are preserved
+for provenance but do not count toward OromoCorpus because the marginal yield
+is too small relative to higher-value independent sources.
+
+See `docs/sources/CC100_OM_AUDIT.md`.
+
+### Mozilla Common Voice Oromo Scripted Speech 27.0
+
+**Status: next active source; paused after download.**
+
+The CC0-1.0 release has been downloaded locally. No transcript rows have yet
+been extracted or counted. Resume by inspecting the TSV metadata, extracting
+unique Oromo transcript sentences, and running the standard exact/near
+cross-source qualification pipeline.
+
+See `docs/sources/COMMON_VOICE_OROMO_STATUS.md`.

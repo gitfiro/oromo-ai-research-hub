@@ -55,8 +55,8 @@ The goal is not to build a quick chatbot. The goal is to create reusable, docume
 | Component | Purpose | Status |
 | --- | --- | --- |
 | **OromoCorpus** | Versioned, provenance-tracked Afaan Oromoo training corpus | ✅ 50M minimum achieved; expanding toward 100M |
-| **OromoTokenizer** | Tokenization research and Oromo-aware tokenizer candidates | 🧪 Gemma +8K and +4K model-level candidates under controlled comparison |
-| **OromoLM** | Continued-pretrained Afaan Oromoo causal language models | 🧪 +8K v0.3 near-parity complete; +4K two-stage ablation training complete, final evaluation pending |
+| **OromoTokenizer** | Tokenization research and Oromo-aware tokenizer candidates | ✅ Gemma +4K is the strongest current model-level candidate under the frozen gate |
+| **OromoLM** | Continued-pretrained Afaan Oromoo causal language models | ✅ +4K v0.3 ablation crosses native and +8K Oromo BPB references while passing WikiText retention |
 | **OromoBench** | Afaan Oromoo evaluation framework | 🔄 In development |
 
 Canonical naming is documented in [`docs/NAMING.md`](docs/NAMING.md).
@@ -77,7 +77,10 @@ The current accepted corpus planning total is measured with the **Oromo Unigram 
 | WaxalNLP Oromo ASR v0.1 | 44,194 | 1,934,045 |
 | MADLAD-400 Oromo v0.2 | 18,704 | 17,873,390 |
 | HPLT 3.0 gaz_Latn v0.1 | 26,655 | 19,771,727 |
-| **Accepted total** | **511,510** | **52,137,803** |
+| Michsethowusu Oromo Sentiments cleaned subset v0.1 | 193,681 | 3,877,136 |
+| Michsethowusu English–Oromo cleaned monolingual subset v0.1 | 45,048 | 1,185,406 |
+| Glot500 Oromo source-partitioned subset v0.1 | 80,069 | 5,913,656 |
+| **Accepted total** | **830,308** | **63,114,001** |
 
 ### MADLAD-400 licensing basis
 
@@ -115,17 +118,58 @@ does not represent every source webpage as CC0. See
 
 ```text
 OromoCorpus v0.2 minimum: 50,000,000 tokens
-Current planning total:   52,137,803
-Progress:                 104.28%
-Margin above minimum:      2,137,803
+Current planning total:   63,114,001
+Progress:                 114.40%
+Margin above minimum:      13,114,001
 
 OromoCorpus v0.3 target: 100,000,000 tokens
-Current progress:         52.14%
+Current progress:         63.11%
 ```
 
 The full WURA Oromo package remains under source-level review and does not count as an accepted source by itself. Only independently audited and rights-cleared subsets are admitted.
 
 With the 50M minimum now achieved, corpus acquisition continues toward the preferred **100M** target with greater emphasis on domain, dialect, literary, educational, technical, and conversational diversity rather than raw volume alone.
+
+### Michsethowusu cleaned-subset qualification
+
+The upstream `michsethowusu/oromo-sentiments-corpus` was **not** accepted wholesale because the original 825,272 rows contain substantial multilingual/noisy material and heavy overlap with AfriBERTa. Oromo AI accepted only a frozen cleaned text subset after Oromo/noise screening, exact cross-source deduplication, and canonical 5-word-shingle near deduplication at Jaccard 0.85.
+
+The accepted subset contributes **193,681 records / 3,877,136 48K-reference tokens**, raising the planning total to **56,014,939 tokens (56.01% of the 100M target)**. See [the source report](docs/sources/MICHSETHOWUSU_OROMO_SENTIMENTS_REPORT.md).
+
+### English–Oromo cleaned monolingual qualification
+
+The NLLB-derived `michsethowusu/english-oromo_sentence-pairs` source was highly noisy and redundant. Oromo AI therefore rejected its sentence-pair alignment for translation use and accepted only the cleaned Oromo-side monolingual residual after filtering plus exact and canonical near cross-source deduplication.
+
+The frozen subset contributes **45,048 records / 1,185,406 48K-reference tokens**, raising OromoCorpus to **63,114,001 reference tokens (63.11% of the 100M target)**. See [the source report](docs/sources/MICHSETHOWUSU_ENGLISH_OROMO_REPORT.md).
+
+### Glot500 Oromo source-partitioned qualification
+
+Glot500 was audited as an aggregator rather than accepted wholesale. After excluding already represented and non-commercial source families, the priority Oromo candidate passed exact and canonical 5-word-shingle near cross-source deduplication against all eight previously accepted OromoCorpus sources.
+
+The accepted source-partitioned subset contains **80,069 records / 5,913,656 48K-reference tokens** from CC100, AAU, HornMT, and TICO. The `mtdata` tranche remains held for source-specific licensing review. The accepted artifact is frozen at SHA-256 `a896acf3a88f40e017dd802f821c4bf8bc9278cd8483760b21e0229ffd10914f`.
+
+See [the Glot500 Oromo qualification report](docs/sources/GLOT500_OROMO_REPORT.md).
+
+### Latest corpus-expansion audit
+
+The official upstream **CC100 Oromo** release was audited after the Glot500
+CC100 tranche had already been accepted. After conservative filtering, 89.13%
+of the candidate was removed as exact overlap and a further 57.59% of the
+exact-net-new residual was removed by the canonical near-dedup gate. Only
+**5,603 rows / 194,669 words** remained, so this residual was preserved but
+**not promoted** into OromoCorpus.
+
+The accepted corpus therefore remains **830,308 records / 63,114,001
+48K-reference tokens (63.11% of the 100M planning target)**.
+
+The next independent source family is **Mozilla Common Voice Oromo Scripted
+Speech 27.0 (CC0-1.0)**. The archive has been downloaded locally, but transcript
+extraction, deduplication, and token measurement are intentionally paused for
+the next session.
+
+See:
+- [CC100 Oromo audit](docs/sources/CC100_OM_AUDIT.md)
+- [Common Voice Oromo status](docs/sources/COMMON_VOICE_OROMO_STATUS.md)
 
 ### OromoTokenizer
 
@@ -182,7 +226,25 @@ General-language retention remained within the predeclared gate. Untouched Gemma
 
 The v0.3 result was preserved locally from the A100 environment and **53/53 hashed files matched with zero integrity failures**.
 
-A controlled **Gemma +4K model-level ablation** has now also completed both predeclared training stages. At the pilot-equivalent Stage A checkpoint, +4K measured **1.844463004 exact Oromo BPB**, improving on the +8K Stage A result of **1.863338883** by about **1.01%**, while remaining about **6.38% above/worse than native-tokenizer CPT**. Stage B completed the full fresh 10.039M-word continuation and produced checkpoints through step **1,517**; its exact Oromo BPB learning curve and WikiText retention evaluation are still pending, so no final +4K-vs-+8K winner is claimed.
+A controlled **Gemma +4K model-level ablation** has now completed both predeclared training stages **and the frozen evaluation gate**. Its Stage B exact Oromo BPB curve was:
+
+| +4K step | Exact Oromo BPB |
+| ---: | ---: |
+| 250 | 1.781058836 |
+| 500 | 1.744201370 |
+| 750 | **1.727396376** |
+| 1,000 | **1.721889019** |
+| 1,250 | **1.720904266** |
+| 1,500 | **1.720890953** |
+| 1,517 | **1.720890950** |
+
+The +4K path crosses both the native-tokenizer CPT reference (**1.733832395**) and the +8K v0.3 reference (**1.734823064**) by step 750. The final step-1517 result is about **0.75% lower/better than native CPT** and **0.80% lower/better than +8K v0.3** on the same frozen Oromo BPB protocol.
+
+General-language retention also passes the predeclared WikiText gate. Checkpoint 1,250 scored **1.030453326 BPB** and checkpoint 1,517 scored **1.030463994 BPB**, both below the fixed ceiling of **1.063917363** and both slightly better/lower than the +8K final WikiText result of **1.033754855**.
+
+Under the predeclared decision rules, **Gemma +4K is now the strongest current OromoLM tokenizer/model candidate**. This is a result on the declared frozen evaluation protocol, not a claim of universal superiority across every downstream task.
+
+A source-level robustness check supports that result: +4K beats +8K on **all six** Oromo validation sources and beats native CPT on **five of six**. The only source-level regression versus native CPT is Wikimedia at **+0.345% BPB**. At the record level, +4K wins **57.22%** of matched records versus native CPT and **72.26%** versus +8K. The gain is therefore broad, but not universal; Wikimedia and the regression tail remain explicit follow-up targets. A paired 10,000-resample bootstrap further supports the result: +4K-vs-native has a 95% mean-delta interval of **[-0.020199325, -0.007414796] BPB**, and +4K-vs-+8K has **[-0.053106421, -0.043233026] BPB**; both intervals remain entirely below zero.
 
 The complete +4K run was copied back from RunPod and verified against its preservation manifest: **66 files checked, 0 failures**, totaling about **18 GB** locally. Large model artifacts remain outside normal Git tracking.
 
@@ -291,13 +353,13 @@ The repository is research infrastructure under active development; commands and
 ✅ Native-vs-+8K 10-step GPU smoke tests
 ✅ First controlled Gemma native-vs-+8K CPT pilot
 
-✅ OromoCorpus 50M minimum achieved — 52,137,803 reference tokens
+✅ OromoCorpus 50M minimum achieved — current total 56,014,939 reference tokens
 🔄 Expand OromoCorpus toward the preferred 100M target
 ✅ Exact byte-normalized three-way LM evaluation
 ✅ +8K v0.3 fresh-data learning curve + forgetting controls
 ✅ +4K two-stage CPT ablation training complete
-🔄 +4K exact Stage B Oromo BPB curve + WikiText retention evaluation
-🔄 Final +4K vs +8K vs native Pareto decision
+✅ +4K exact Stage B Oromo BPB curve + WikiText retention evaluation
+✅ +4K selected as strongest current candidate under the frozen gate
 🔄 Develop OromoBench
 
 ✅ Tiny CPT proof
@@ -325,7 +387,7 @@ Detailed technical material lives in `docs/` rather than being duplicated in thi
 | [CPT Pilot Report](docs/CPT_PILOT_REPORT.md) | Gemma native-vs-+8K workload, GPU, quality, and reproducibility evidence |
 | [CPT Reproduction v0.2 Results](docs/CPT_RERUN_V0_2_RESULTS.md) | Exact three-way Oromo BPB results, rerun hashes, and next quality gate |
 | [CPT +4K Ablation Protocol](docs/CPT_4K_ABLATION_PROTOCOL.md) | Predeclared two-stage +4K comparison design and decision rules |
-| [CPT +4K Ablation Results](docs/CPT_4K_ABLATION_RESULTS.md) | Completed training status, Stage A BPB, preservation evidence, and pending Stage B evaluation |
+| [CPT +4K Ablation Results](docs/CPT_4K_ABLATION_RESULTS.md) | Full +4K learning curve, retention result, preservation evidence, and candidate-selection outcome |
 | [Evaluation](docs/EVALUATION.md) | OromoBench and normalized model-evaluation direction |
 | [Roadmap](docs/ROADMAP.md) | Project phases and current milestone |
 | [MADLAD License Decision](docs/sources/MADLAD_400_LICENSE_DECISION.md) | ODC-BY approval basis, attribution obligations, and scope limitations |
